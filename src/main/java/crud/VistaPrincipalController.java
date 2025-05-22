@@ -13,13 +13,20 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.FileChooser;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 
 public class VistaPrincipalController {
 
@@ -55,16 +62,19 @@ public class VistaPrincipalController {
     @FXML
     private TextField textFieldPoblacion;
 
-    @FXML
-    private TextField textFieldBuscar;
 
     @FXML
-    private Button buttonConfigurar;
+    private Button buttonExportar;
 
     private CityDAO ciudadDAO = new CityDAO();
     private CountryDAO countryDAO = new CountryDAO();
 
     private ObservableList<City> paises = FXCollections.observableArrayList();
+
+    /**
+     * Inicializa la vista principal.(Configuracion de la tabla, cargar el combo, añade el listener para la tabla,
+     * )
+     */
 
     @FXML
     public void initialize() {
@@ -83,6 +93,10 @@ public class VistaPrincipalController {
         });
     }
 
+    /**
+     * Hace la accion de actualizar una ciudad seleccionada. 
+     * Valida que los campos esten correctos y actualiza la ciudad en la base de datos
+     */
     @FXML
     private void handleActualizar() {
         // Obtener los valores de los campos de texto
@@ -110,24 +124,22 @@ public class VistaPrincipalController {
                 return;
             }
 
-            // Actualizar en la base de datos
-            String sql = "UPDATE city SET Name = '" + nombre + "', District = '" + distrito + "', Population = "
-                    + poblacion + " WHERE ID = " + id;
-
-            try (Connection connection = DatabaseConnection.getConnection();
-                    Statement statement = connection.createStatement()) {
-                int filasActualizadas = statement.executeUpdate(sql);
-                if (filasActualizadas > 0) {
-                    mostrarAlerta("Actualizada", "Ciudad actualizada correctamente.");
-                    filtrarDatosPorPais(comboBox.getValue());
-                } else {
-                    mostrarAlerta("Actualizada", "No se encontro la ciudada con ese ID");
-                }
+           try {
+                City ciudad = new City(Integer.parseInt(id), nombre, distrito, poblacion);
+                ciudadDAO.actualizarCiudad(ciudad);
+                mostrarAlerta("Actualizada", "Ciudad actualizada correctamente.");
+                filtrarDatosPorPais(comboBox.getValue());
             } catch (SQLException e) {
+                mostrarAlerta("Error", "No se pudo actualizar la ciudad.");
                 e.printStackTrace();
             }
         }
     }
+
+    /**
+     * Hace la accion de borrar una ciudad seleccionada y la elimina de la base de datos 
+     *      
+     * */
 
     @FXML
     private void handleBorrar() {
@@ -143,22 +155,21 @@ public class VistaPrincipalController {
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
 
-            String sql = "DELETE FROM city WHERE ID = ?";
-            try (Connection connection = DatabaseConnection.getConnection();
-                    java.sql.PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, Integer.parseInt(id));
-                int filasBorradas = statement.executeUpdate();
-                if (filasBorradas > 0) {
-                    mostrarAlerta("Borrado", "Ciudad borrada correctamente");
-                    filtrarDatosPorPais(comboBox.getValue());
-                } else {
-                    mostrarAlerta("Error", "No se encontró la ciudad con ese ID.");
-                }
+            try {
+                ciudadDAO.borrarCiudad(Integer.parseInt(id));
+                mostrarAlerta("Borrado", "Ciudad borrada correctamente");
+                filtrarDatosPorPais(comboBox.getValue());
             } catch (SQLException e) {
+                mostrarAlerta("Error", "No se pudo borrar la ciudad.");
                 e.printStackTrace();
             }
         }
     }
+
+    /**
+     * Hace la accion de insertar una nueva ciudad. Valida los campos, comprueba si estan duplicados
+     * y añade la ciudad a la base de datos
+     */
 
     @FXML
     private void handleInsertar() {
@@ -173,7 +184,7 @@ public class VistaPrincipalController {
         }
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Confirmar insertar");
-        alert.setContentText("¿Seguro que quieres instentarlo?");
+        alert.setContentText("¿Seguro que quieres insertarlo?");
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
 
@@ -185,17 +196,11 @@ public class VistaPrincipalController {
                 return;
             }
 
-            // Obtener el código del país
             String countryCode = null;
-            String sqlCountry = "SELECT Code FROM country WHERE Name = ?";
-            try (Connection connection = DatabaseConnection.getConnection();
-                    java.sql.PreparedStatement psCountry = connection.prepareStatement(sqlCountry)) {
-                psCountry.setString(1, paisSeleccionado);
-                ResultSet rs = psCountry.executeQuery();
-                if (rs.next()) {
-                    countryCode = rs.getString("Code");
-                }
+            try {
+                countryCode = countryDAO.getCountryCode(paisSeleccionado);
             } catch (SQLException e) {
+                mostrarAlerta("Error", "No se pudo obtener el código del país.");
                 e.printStackTrace();
                 return;
             }
@@ -205,45 +210,41 @@ public class VistaPrincipalController {
                 return;
             }
 
-            // Comprobar si ya existe la ciudad
-            String sqlCheck = "SELECT * FROM city WHERE Name = ? AND District = ? AND CountryCode = ?";
             try (Connection connection = DatabaseConnection.getConnection();
-                    java.sql.PreparedStatement psCheck = connection.prepareStatement(sqlCheck)) {
-                psCheck.setString(1, nombre);
-                psCheck.setString(2, distrito);
-                psCheck.setString(3, countryCode);
-                ResultSet rsCheck = psCheck.executeQuery();
-                if (rsCheck.next()) {
+                java.sql.PreparedStatement ps = connection.prepareStatement(
+                    "SELECT * FROM city WHERE Name = ? AND District = ? AND CountryCode = ?")) {
+                ps.setString(1, nombre);
+                ps.setString(2, distrito);
+                ps.setString(3, countryCode);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
                     mostrarAlerta("Ciudad existente", "Ya existe una ciudad con ese nombre, distrito y país.");
                     return;
                 }
             } catch (SQLException e) {
+                mostrarAlerta("Error", "No se pudo comprobar la existencia de la ciudad.");
                 e.printStackTrace();
                 return;
             }
 
-            // Insertar la ciudad
-            String sql = "INSERT INTO city (Name, CountryCode, District, Population) VALUES (?, ?, ?, ?)";
-            try (Connection connection = DatabaseConnection.getConnection();
-                    java.sql.PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, nombre);
-                statement.setString(2, countryCode);
-                statement.setString(3, distrito);
-                statement.setInt(4, poblacion);
-                int filasInsertadas = statement.executeUpdate();
-                if (filasInsertadas > 0) {
-                    mostrarAlerta("Éxito", "Ciudad insertada correctamente.");
-                    filtrarDatosPorPais(comboBox.getValue());
-                } else {
-                    mostrarAlerta("Error", "No se pudo insertar la ciudad.");
-                }
+
+            try {
+                City ciudad = new City(0, nombre, distrito, poblacion);
+                ciudadDAO.añadirCiudad(ciudad, countryCode);
+                mostrarAlerta("Éxito", "Ciudad insertada correctamente.");
+                filtrarDatosPorPais(comboBox.getValue());
             } catch (SQLException e) {
+                mostrarAlerta("Error", "No se pudo insertar la ciudad.");
                 e.printStackTrace();
-            }
         }
     }
+}
 
-    // Método auxiliar para mostrar alertas
+    /**
+     * Este metodo es un metodo auxiliar para mostrar alertas de tipo information
+     * @param titulo
+     * @param mensaje
+     */
     private void mostrarAlerta(String titulo, String mensaje) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(titulo);
@@ -252,6 +253,9 @@ public class VistaPrincipalController {
         alert.showAndWait();
     }
 
+    /**
+     * Añade un listener a la tabla para mostrar los atributos de las ciudades en los textfield
+     */
     private void agregarListenerTabla() {
         tableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -263,12 +267,20 @@ public class VistaPrincipalController {
         });
     }
 
+    /**
+     * Metodo para configurar las columnas de la tabla para mostrar las ciudades
+     */
+
     private void configurarTabla() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colNombre.setCellValueFactory(new PropertyValueFactory<>("name"));
         colDistrito.setCellValueFactory(new PropertyValueFactory<>("district"));
         colPoblacion.setCellValueFactory(new PropertyValueFactory<>("population"));
     }
+
+    /**
+     * Carga los datos de las ciudades en la tabla
+     */
 
     @FXML
     private void cargarDatos() {
@@ -282,6 +294,11 @@ public class VistaPrincipalController {
         }
     }
 
+    /**
+     * Filtra y muestra las ciudades segun el pais seleccionado en el combo box
+     * @param paisSeleccionado
+     */
+
     private void filtrarDatosPorPais(String paisSeleccionado) {
         if (paisSeleccionado == null || paisSeleccionado.isEmpty()) {
             cargarDatos();
@@ -289,7 +306,7 @@ public class VistaPrincipalController {
         }
         paises.clear();
         try {
-            List<City> ciudades = ciudadDAO.getCitiesByCountry(paisSeleccionado);
+            List<City> ciudades = ciudadDAO.getCiudadesByCountry(paisSeleccionado);
             paises.addAll(ciudades);
             tableView.setItems(paises);
         } catch (SQLException e) {
@@ -297,24 +314,22 @@ public class VistaPrincipalController {
         }
     }
 
+    /**
+     * Cargar los paises en el combobox
+     */
+
     private void cargarComboBox() {
-        try (Connection connection = DatabaseConnection.getConnection();
-                Statement statement = connection.createStatement();
-                // Selecciona los nombres de los países y ordénalos alfabéticamente
-                ResultSet resultSet = statement
-                        .executeQuery("SELECT DISTINCT Name AS nombre FROM country ORDER BY Name ASC")) {
-
-            while (resultSet.next()) {
-                comboBox.getItems().add(resultSet.getString("nombre"));
-            }
-
-            // Configura un listener para manejar la selección del ComboBox
-            comboBox.setOnAction(event -> filtrarDatosPorPais(comboBox.getValue()));
+        try {
+            comboBox.getItems().setAll(countryDAO.getAllCountries());
+            comboBox.setOnAction(e->filtrarDatosPorPais(comboBox.getValue()));
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * Cambia el tema de la aplicacion a claro
+     */
     @FXML
     private void setTemaClaro() {
         Scene scene = root.getScene();
@@ -322,6 +337,9 @@ public class VistaPrincipalController {
         System.out.println("Tema claro");
     }
 
+    /**
+     * Cambia el tema de la aplicacion a oscuro
+     */
     @FXML
     private void setTemaOscuro() {
         Scene scene = root.getScene();
@@ -331,7 +349,33 @@ public class VistaPrincipalController {
         System.out.println("Tema oscuro");
     }
 
-    private void handleConfiguracion() {
+    /**
+     * Exporta los datos de la tabla a un archivo JSON seleccionando la ruta por el usuario
+     */
 
+    @FXML
+    private void exportarJson(){
+        ObservableList<City> datos = tableView.getItems();
+        if(datos == null|| datos.isEmpty()){
+            mostrarAlerta("Exportar JSON", "No hay datos para exportar");
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Guardar archivo JSON");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivos JSON", "*.json"));
+        fileChooser.setInitialFileName("ciudades_exportadas.json");
+
+        File archivo = fileChooser.showSaveDialog(root.getScene().getWindow());
+        if(archivo !=null){
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            try (FileWriter writer = new FileWriter(archivo)){
+                gson.toJson(datos,writer);
+                mostrarAlerta("Exportacion exitosa", "Datos exportados a: "+archivo.getAbsolutePath());
+            } catch (IOException e) {
+                mostrarAlerta("Error", "No se pudo exportar el archivo: "+e.getMessage());
+            } 
+        }
     }
+
 }

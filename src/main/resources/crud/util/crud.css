@@ -1,5 +1,5 @@
 .root {
-    -fx-font-family: 'Segoe UI', Arial, sans-serif;
+    -fx-font-family: 'Arial';
     -fx-background-color: #f4f6fa;
     -fx-padding:20;
 }
@@ -64,7 +64,6 @@
     -fx-table-cell-border-color: #444;
 }
 
-/* Añadido: color de texto claro para los encabezados de columna en tema oscuro */
 .dark-theme .table-view .column-header,
 .dark-theme .table-view .column-header .label {
     -fx-background-color: #23272f;
@@ -101,10 +100,8 @@
 
 .button:hover {
     -fx-effect: dropshadow(gaussian, #42a5f5, 10, 0.5, 0, 0);
-    /* No existe animation en JavaFX CSS, pero el efecto visual se logra con dropshadow */
 }
 
-/* Para tema oscuro, un brillo diferente */
 .dark-theme .button:hover {
     -fx-effect: dropshadow(gaussian, #90caf9, 12, 0.7, 0, 0);
 }

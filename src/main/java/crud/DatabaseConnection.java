@@ -13,6 +13,13 @@ public class DatabaseConnection {
 
     private static Connection connection;
 
+
+    /**
+     * Obtiene la conexion a la base de datos, si no existe
+     * o esta cerrada, la crea
+     * @return
+     * @throws SQLException
+     */
     public static Connection getConnection() throws SQLException {
         if (connection == null || connection.isClosed()) {
             try (FileInputStream fis = new FileInputStream("src/main/resources/crud/db.properties")) {

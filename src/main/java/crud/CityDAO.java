@@ -6,7 +6,13 @@ import java.util.List;
 
 public class CityDAO {
 
-    public List<City> getCitiesByCountry(String countryName) throws SQLException {
+    /**
+     * Obitiene lista de las ciudades que pertenecen a un pais especifico
+     * @param countryName
+     * @return
+     * @throws SQLException
+     */
+    public List<City> getCiudadesByCountry(String countryName) throws SQLException {
         List<City> cities = new ArrayList<>();
         String query = "SELECT city.ID, city.Name, city.District, city.Population " +
                 "FROM city " +
@@ -29,6 +35,12 @@ public class CityDAO {
         return cities;
     }
 
+    /**
+     * Obtiene todas las ciudades
+     * @return
+     * @throws SQLException
+     */
+
     public List<Pais> getAllCities() throws SQLException {
         List<Pais> cities = new ArrayList<>();
         String query = "SELECT city.ID, city.Name, city.District, city.Population " +
@@ -46,8 +58,13 @@ public class CityDAO {
         }
         return cities;
     }
+    /**
+     * Actualiza los datos de una ciudad
+     * @param city
+     * @throws SQLException
+     */
 
-    public void updateCity(City city) throws SQLException {
+    public void actualizarCiudad(City city) throws SQLException {
         String query = "UPDATE city SET Name = ?, District = ?, Population = ? WHERE ID = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
@@ -60,17 +77,28 @@ public class CityDAO {
         }
     }
 
-    public void deleteCity(int cityId) throws SQLException {
-        String query = "DELETE FROM city WHERE ID = ?";
+    /**
+     * Borra una ciudad de la base de datos
+     * @param id
+     * @throws SQLException
+     */
 
-        try (Connection connection = DatabaseConnection.getConnection();
-                PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, cityId);
-            statement.executeUpdate();
+    public void borrarCiudad(int id) throws SQLException {
+        try (Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement("DELETE FROM city WHERE id = ?")) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
         }
     }
 
-    public void addCity(City city, String countryCode) throws SQLException {
+
+    /**
+     * Añade una ciudad en la base de datos
+     * @param city
+     * @param countryCode
+     * @throws SQLException
+     */
+    public void añadirCiudad(City city, String countryCode) throws SQLException {
         String query = "INSERT INTO city (Name, CountryCode, District, Population) VALUES (?, ?, ?, ?)";
 
         try (Connection connection = DatabaseConnection.getConnection();

@@ -6,12 +6,21 @@ public class Pais {
     private String distrito;
     private int poblacion;
 
+    /**
+     * Constructor de la clase pais
+     * @param id
+     * @param nombre
+     * @param distrito
+     * @param poblacion
+     */
     public Pais(String id, String nombre, String distrito, int poblacion) {
         this.id = id;
         this.nombre = nombre;
         this.distrito = distrito;
         this.poblacion = poblacion;
     }
+
+    // Getters y setters
 
     public String getId() {
         return id;

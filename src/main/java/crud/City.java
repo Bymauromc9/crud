@@ -1,10 +1,21 @@
 package crud;
 
+import com.google.gson.annotations.SerializedName;
+
 public class City {
+
     private int id;
     private String name;
     private String district;
     private int population;
+
+    /**
+     * Constructor
+     * @param id
+     * @param name
+     * @param district
+     * @param population
+     */
 
     public City(int id, String name, String district, int population) {
         this.id = id;
@@ -13,6 +24,7 @@ public class City {
         this.population = population;
     }
 
+    // Getters y setters
     public int getId() {
         return id;
     }

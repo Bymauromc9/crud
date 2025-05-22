@@ -17,8 +17,8 @@
                 <HBox alignment="TOP_CENTER" spacing="10">
                     <children>
                         <ComboBox fx:id="comboBox" maxWidth="Infinity" promptText="Selecciona un país" />
-                        <Button onAction="#setTemaClaro" text="Tema Claro" />
-                        <Button onAction="#setTemaOscuro" text="Tema Oscuro" />
+                        <Button alignment="TOP_LEFT" onAction="#setTemaClaro" text="Tema Claro" />
+                        <Button alignment="TOP_LEFT" onAction="#setTemaOscuro" text="Tema Oscuro" />
                     </children>
                 </HBox>
             </children>
@@ -38,7 +38,7 @@
         </TableView>
     </center>
     <right>
-        <VBox alignment="TOP_CENTER" prefWidth="220" spacing="8" style="-fx-padding: 10;" BorderPane.alignment="CENTER">
+        <VBox alignment="CENTER" prefWidth="220" spacing="8" style="-fx-padding: 10;" BorderPane.alignment="CENTER">
             <children>
                 <Label text="Id" />
                 <TextField fx:id="textFieldId" />
@@ -48,6 +48,7 @@
                 <TextField fx:id="textFieldDistrito" />
                 <Label text="Población" />
                 <TextField fx:id="textFieldPoblacion" />
+            <Button fx:id="buttonExportar" mnemonicParsing="false" onAction="#exportarJson" text="Exportar a JSON" />
             </children>
         </VBox>
     </right>
