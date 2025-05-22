@@ -15,7 +15,7 @@
 }
 
 .button {
-    -fx-background-color: #1976d2;
+    -fx-background-color: #00d9ff;
     -fx-text-fill: white;
     -fx-background-radius: 6;
     -fx-font-weight: bold;
@@ -24,7 +24,7 @@
 }
 
 .button:hover {
-    -fx-background-color: #1565c0;
+    -fx-background-color: #00d9ff;
 }
 
 .table-view {

@@ -1,23 +1,20 @@
 package crud;
 
-
-import java.net.Socket;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
 
 public class CityDAO {
 
     public List<City> getCitiesByCountry(String countryName) throws SQLException {
         List<City> cities = new ArrayList<>();
         String query = "SELECT city.ID, city.Name, city.District, city.Population " +
-                       "FROM city " +
-                       "JOIN country ON city.CountryCode = country.Code " +
-                       "WHERE country.Name = ?";
+                "FROM city " +
+                "JOIN country ON city.CountryCode = country.Code " +
+                "WHERE country.Name = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, countryName);
             ResultSet resultSet = statement.executeQuery();
 
@@ -26,26 +23,25 @@ public class CityDAO {
                         resultSet.getInt("ID"),
                         resultSet.getString("Name"),
                         resultSet.getString("District"),
-                        resultSet.getInt("Population")
-                ));
+                        resultSet.getInt("Population")));
             }
         }
         return cities;
     }
+
     public List<Pais> getAllCities() throws SQLException {
         List<Pais> cities = new ArrayList<>();
         String query = "SELECT city.ID, city.Name, city.District, city.Population " +
-                       "FROM city JOIN country ON city.CountryCode = country.Code";
+                "FROM city JOIN country ON city.CountryCode = country.Code";
         try (Connection connection = DatabaseConnection.getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet rs = statement.executeQuery(query)) {
+                Statement statement = connection.createStatement();
+                ResultSet rs = statement.executeQuery(query)) {
             while (rs.next()) {
                 cities.add(new Pais(
                         rs.getString("ID"),
                         rs.getString("Name"),
                         rs.getString("District"),
-                        rs.getInt("Population")
-                ));
+                        rs.getInt("Population")));
             }
         }
         return cities;
@@ -55,7 +51,7 @@ public class CityDAO {
         String query = "UPDATE city SET Name = ?, District = ?, Population = ? WHERE ID = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
-            PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, city.getName());
             statement.setString(2, city.getDistrict());
             statement.setInt(3, city.getPopulation());
@@ -68,7 +64,7 @@ public class CityDAO {
         String query = "DELETE FROM city WHERE ID = ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, cityId);
             statement.executeUpdate();
         }
@@ -78,7 +74,7 @@ public class CityDAO {
         String query = "INSERT INTO city (Name, CountryCode, District, Population) VALUES (?, ?, ?, ?)";
 
         try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+                PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, city.getName());
             statement.setString(2, countryCode);
             statement.setString(3, city.getDistrict());

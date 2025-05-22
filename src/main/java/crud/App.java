@@ -28,16 +28,15 @@ public class App extends Application {
         stage.setMinWidth(700);
         stage.setMinHeight(400);
         stage.show();
-        stage.setOnCloseRequest(evento ->{
+        stage.setOnCloseRequest(evento -> {
             Alert alerta = new Alert(Alert.AlertType.CONFIRMATION);
-            alerta.setTitle("Ahorcado");
+            alerta.setTitle("Salida");
             alerta.setHeaderText("¿Seguro que quieres salir de la aplicación?");
-            Optional<ButtonType> botonCancelar=alerta.showAndWait();
-            if (botonCancelar.isPresent() && botonCancelar.get()==ButtonType.CANCEL) {
+            Optional<ButtonType> botonCancelar = alerta.showAndWait();
+            if (botonCancelar.isPresent() && botonCancelar.get() == ButtonType.CANCEL) {
                 evento.consume();
             }
-        }
-        );
+        });
     }
 
     static void setRoot(String fxml) throws IOException {
