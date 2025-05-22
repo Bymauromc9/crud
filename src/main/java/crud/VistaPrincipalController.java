@@ -21,7 +21,6 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 
-
 public class VistaPrincipalController {
 
     @FXML private BorderPane root;
@@ -208,7 +207,7 @@ private void handleInsertar() {
     // Comprobar si ya existe la ciudad
     String sqlCheck = "SELECT * FROM city WHERE Name = ? AND District = ? AND CountryCode = ?";
     try (Connection connection = DatabaseConnection.getConnection();
-         java.sql.PreparedStatement psCheck = connection.prepareStatement(sqlCheck)) {
+        java.sql.PreparedStatement psCheck = connection.prepareStatement(sqlCheck)) {
         psCheck.setString(1, nombre);
         psCheck.setString(2, distrito);
         psCheck.setString(3, countryCode);
@@ -264,7 +263,6 @@ private void mostrarAlerta(String titulo, String mensaje) {
         }
     });
 }
-
 
     private void configurarTabla() {
     colId.setCellValueFactory(new PropertyValueFactory<>("id"));
